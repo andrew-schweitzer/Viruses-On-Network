@@ -28,6 +28,13 @@ to setup-nodes
   ]
 end
 
+to become-infected
+  let virus random 3
+  if virus = 1 [become-infected_v1]
+  if virus = 2 [become-infected_v2]
+  if virus = 3 [become-infected_v3]
+end
+
 to setup-spatially-clustered-network
   let num-links (average-node-degree * number-of-nodes) / 2
   while [count links < num-links ]
@@ -55,13 +62,17 @@ to go
      if virus-check-timer >= virus-check-frequency
        [ set virus-check-timer 0 ]
   ]
-  spread-virus_v1
-  spread-virus_v2
-  spread-virus_v3
+  spread-virus1
+  spread-virus2
+  spread-virus3
   do-virus1-checks
   do-virus2-checks
   do-virus3-checks
   tick
+end
+
+to health-check
+
 end
 
 to become-infected_v1  ;; turtle procedure
@@ -90,11 +101,12 @@ to become-susceptible  ;; turtle procedure
   set color blue
 end
 
-to BuyAntiMalware  ;; turtle procedure
-  set infected? false
-  set resistant? true
+to become-resistant  ;; turtle procedure
+  set infected_v1? false
+  set infected_v2? false
+  set infected_v3? false
+  set AntiVirus? true
   set color green
-  ask my-links [ set color gray - 2 ]
 end
 
 to spread-virus1
@@ -121,9 +133,9 @@ end
 to do-virus1-checks
   ask turtles with [infected_v1? and virus-check-timer = 0]
   [
-    if random 100 < RepairRate
+    if random 100 < 45
     [
-      ifelse random 100 < BuyAntiVirus
+      ifelse random 100 < 15
         [ become-resistant ]
         [ become-susceptible ]
     ]
@@ -133,9 +145,9 @@ end
 to do-virus2-checks
   ask turtles with [infected_v2? and virus-check-timer = 0]
   [
-    if random 100 < RepairRate
+    if random 100 < 45
     [
-      ifelse random 100 < BuyAntiVirus
+      ifelse random 100 < 15
         [ become-resistant ]
         [ become-susceptible ]
     ]
@@ -145,9 +157,9 @@ end
 to do-virus3-checks
   ask turtles with [infected_v3? and virus-check-timer = 0]
   [
-    if random 100 < RepairRate
+    if random 100 < 45
     [
-      ifelse random 100 < BuyAntiVirus
+      ifelse random 100 < 15
         [ become-resistant ]
         [ become-susceptible ]
     ]

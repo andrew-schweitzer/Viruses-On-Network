@@ -77,27 +77,30 @@ end
 
 to become-infected_v1  ;; turtle procedure
   set infected_v1? true
-  set AntiVirus? false
   set color yellow
+  if infected_v2? = 1 or infected_v3? = 1 [set color orange]
+  if infected_v2? = 1 and infected_v3? = 1 [set color red]
+
 end
 
 to become-infected_v2  ;; turtle procedure
   set infected_v2? true
-  set AntiVirus? false
-  set color orange
+  set color yellow
+  if infected_v1? = 1 or infected_v3? = 1 [set color orange]
+  if infected_v1? = 1 and infected_v3? = 1 [set color red]
 end
 
 to become-infected_v3  ;; turtle procedure
   set infected_v3? true
-  set AntiVirus? false
-  set color red
+  set color yellow
+  if infected_v2? = 1 or infected_v1? = 1 [set color orange]
+  if infected_v2? = 1 and infected_v1? = 1 [set color red]
 end
 
 to become-susceptible  ;; turtle procedure
   set infected_v1? false
   set infected_v2? false
   set infected_v3? false
-  set AntiVirus? false
   set color blue
 end
 
@@ -135,7 +138,7 @@ to do-virus1-checks
   [
     if random 100 < 45
     [
-      ifelse random 100 < 15
+      ifelse random 100 < 5
         [ become-resistant ]
         [ become-susceptible ]
     ]
@@ -194,36 +197,6 @@ GRAPHICS-WINDOW
 1
 ticks
 30.0
-
-SLIDER
-25
-280
-230
-313
-gain-resistance-chance
-gain-resistance-chance
-0.0
-100
-5.0
-1
-1
-%
-HORIZONTAL
-
-SLIDER
-25
-245
-230
-278
-recovery-chance
-recovery-chance
-0.0
-10.0
-5.0
-0.1
-1
-%
-HORIZONTAL
 
 SLIDER
 25
@@ -318,7 +291,7 @@ virus-check-frequency
 virus-check-frequency
 1
 20
-1.0
+7.0
 1
 1
 ticks
@@ -333,7 +306,7 @@ initial-outbreak-size
 initial-outbreak-size
 1
 number-of-nodes
-3.0
+5.0
 1
 1
 NIL
@@ -348,7 +321,7 @@ average-node-degree
 average-node-degree
 1
 number-of-nodes - 1
-6.0
+7.0
 1
 1
 NIL

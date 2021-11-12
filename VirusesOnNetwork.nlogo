@@ -77,24 +77,24 @@ end
 
 to become-infected_v1  ;; turtle procedure
   set infected_v1? true
-  set color yellow
-  if infected_v2? = 1 or infected_v3? = 1 [set color orange]
-  if infected_v2? = 1 and infected_v3? = 1 [set color red]
+  if infected_v2? = false and infected_v3? = false [set color yellow]
+  if infected_v2? = true or infected_v3? = true [set color orange]
+  if infected_v2? = true and infected_v3? = true [set color red]
 
 end
 
 to become-infected_v2  ;; turtle procedure
   set infected_v2? true
-  set color yellow
-  if infected_v1? = 1 or infected_v3? = 1 [set color orange]
-  if infected_v1? = 1 and infected_v3? = 1 [set color red]
+  if infected_v1? = false and infected_v3? = false [set color yellow]
+  if infected_v1? = true or infected_v3? = true [set color orange]
+  if infected_v1? = true and infected_v3? = true [set color red]
 end
 
 to become-infected_v3  ;; turtle procedure
   set infected_v3? true
-  set color yellow
-  if infected_v2? = 1 or infected_v1? = 1 [set color orange]
-  if infected_v2? = 1 and infected_v1? = 1 [set color red]
+  if infected_v1? = false and infected_v2? = false [set color yellow]
+  if infected_v2? = true or infected_v1? = true [set color orange]
+  if infected_v2? = true and infected_v1? = true [set color red]
 end
 
 to become-susceptible  ;; turtle procedure
@@ -114,21 +114,21 @@ end
 
 to spread-virus1
   ask turtles with [infected_v1?]
-    [ ask link-neighbors with [not AntiVirus?]
+    [ ask link-neighbors with [infected_v1?]
         [ if random-float 100 < virus-spread-chance
             [ become-infected_v1 ] ] ]
 end
 
 to spread-virus2
   ask turtles with [infected_v2?]
-    [ ask link-neighbors with [not AntiVirus?]
+    [ ask link-neighbors with [infected_v2?]
         [ if random-float 100 < virus-spread-chance
             [ become-infected_v2 ] ] ]
 end
 
 to spread-virus3
   ask turtles with [infected_v3?]
-    [ ask link-neighbors with [not AntiVirus?]
+    [ ask link-neighbors with [infected_v3?]
         [ if random-float 100 < virus-spread-chance
             [ become-infected_v3 ] ] ]
 end
@@ -207,7 +207,7 @@ virus-spread-chance
 virus-spread-chance
 0.0
 10.0
-2.5
+9.4
 0.1
 1
 %
@@ -276,7 +276,7 @@ number-of-nodes
 number-of-nodes
 10
 300
-150.0
+85.0
 5
 1
 NIL
@@ -291,7 +291,7 @@ virus-check-frequency
 virus-check-frequency
 1
 20
-7.0
+1.0
 1
 1
 ticks
@@ -306,7 +306,7 @@ initial-outbreak-size
 initial-outbreak-size
 1
 number-of-nodes
-5.0
+46.0
 1
 1
 NIL
@@ -320,8 +320,8 @@ SLIDER
 average-node-degree
 average-node-degree
 1
-number-of-nodes - 1
-7.0
+number-of-nodes / 4
+11.0
 1
 1
 NIL
@@ -691,7 +691,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

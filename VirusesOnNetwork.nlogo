@@ -7,18 +7,43 @@ turtles-own
   virus-check-timer   ;; number of ticks since this turtle's last virus-check
 ]
 
+globals [infected count_v1 count_v2 count_v3 remaining]
+
 to setup
   clear-all
   setup-nodes
   setup-spatially-clustered-network
-  ask n-of initial-outbreak-size turtles
-    [ become-infected ]
+
+  set count_v1 initial-outbreak-size / 3
+  set infected 0
+  while [ infected < count_v1 ]
+        [set remaining count_v1 - infected
+         ask n-of remaining turtles
+          [become-infected-v1
+           set infected infected + 1]]
+
+  set count_v2 initial-outbreak-size / 3
+  set infected 0
+  while [ infected < count_v2 ]
+      [set remaining count_v2 - infected
+       ask n-of remaining turtles
+        [become-infected-v2
+         set infected infected + 1]]
+
+  set count_v3 initial-outbreak-size / 3
+  set infected 0
+  while [ infected < count_v3 ]
+      [set remaining count_v2 - infected
+       ask n-of remaining turtles
+        [become-infected-v3
+         set infected infected + 1]]
+
   ask links [ set color white ]
   reset-ticks
 end
 
 to setup-nodes
-  set-default-shape turtles "circle"
+  set-default-shape turtles "square"
   create-turtles number-of-nodes
   [
     ; for visual reasons, we don't put any nodes *too* close to the edges
@@ -26,13 +51,6 @@ to setup-nodes
     become-susceptible
     set virus-check-timer random virus-check-frequency
   ]
-end
-
-to become-infected
-  let virus random 3
-  if virus = 1 [become-infected_v1]
-  if virus = 2 [become-infected_v2]
-  if virus = 3 [become-infected_v3]
 end
 
 to setup-spatially-clustered-network
@@ -54,54 +72,55 @@ to setup-spatially-clustered-network
 end
 
 to go
-  if all? turtles [not infected_v1? or infected_v2? or infected_v3?]
+  if all? turtles [not infected_v1? and not infected_v2? and not infected_v3?]
     [ stop ]
+  health-check
+  spread-virus
   ask turtles
-  [
+   [
      set virus-check-timer virus-check-timer + 1
-     if virus-check-timer >= virus-check-frequency
+     if virus-check-timer >= 10
        [ set virus-check-timer 0 ]
-  ]
-  spread-virus1
-  spread-virus2
-  spread-virus3
-  do-virus1-checks
-  do-virus2-checks
-  do-virus3-checks
+   ]
+
+  do-virus-checks
   tick
 end
 
 to health-check
-
+  ask turtles with [infected_v1? and infected_v2? and infected_v3?] [die]
 end
 
-to become-infected_v1  ;; turtle procedure
-  set infected_v1? true
-  if infected_v2? = false and infected_v3? = false [set color yellow]
-  if infected_v2? = true or infected_v3? = true [set color orange]
-  if infected_v2? = true and infected_v3? = true [set color red]
-
+to become-infected-v1  ;; turtle procedure
+  if not AntiVirus?
+  [set infected_v1? true
+  if not infected_v2? and not infected_v3? [set color blue]
+  if infected_v2? or infected_v3? [set color orange]
+    if infected_v2? and infected_v3? [set color black]]
 end
 
-to become-infected_v2  ;; turtle procedure
-  set infected_v2? true
-  if infected_v1? = false and infected_v3? = false [set color yellow]
-  if infected_v1? = true or infected_v3? = true [set color orange]
-  if infected_v1? = true and infected_v3? = true [set color red]
+to become-infected-v2  ;; turtle procedure
+  if not AntiVirus?
+  [set infected_v2? true
+  if not infected_v1? and not infected_v3? [set color red]
+  if infected_v1? or infected_v3? [set color orange]
+    if infected_v1? and infected_v3? [set color black]]
 end
 
-to become-infected_v3  ;; turtle procedure
-  set infected_v3? true
-  if infected_v1? = false and infected_v2? = false [set color yellow]
-  if infected_v2? = true or infected_v1? = true [set color orange]
-  if infected_v2? = true and infected_v1? = true [set color red]
+to become-infected-v3  ;; turtle procedure
+  if not AntiVirus?
+  [set infected_v3? true
+  if not infected_v1? and not infected_v2? [set color yellow]
+  if infected_v2? or infected_v1? [set color orange]
+    if infected_v2? and infected_v1? [set color black]]
 end
 
 to become-susceptible  ;; turtle procedure
   set infected_v1? false
   set infected_v2? false
   set infected_v3? false
-  set color blue
+  set AntiVirus? false
+  set color white
 end
 
 to become-resistant  ;; turtle procedure
@@ -109,65 +128,37 @@ to become-resistant  ;; turtle procedure
   set infected_v2? false
   set infected_v3? false
   set AntiVirus? true
-  set color green
+  set color magenta
 end
 
-to spread-virus1
+to spread-virus
   ask turtles with [infected_v1?]
-    [ ask link-neighbors with [infected_v1?]
-        [ if random-float 100 < virus-spread-chance
-            [ become-infected_v1 ] ] ]
-end
+    [ ask link-neighbors with [not infected_v1?]
+        [ if random-float 100 < 25
+        [ if not AntiVirus? [become-infected-v1] ] ] ]
 
-to spread-virus2
   ask turtles with [infected_v2?]
-    [ ask link-neighbors with [infected_v2?]
-        [ if random-float 100 < virus-spread-chance
-            [ become-infected_v2 ] ] ]
-end
+    [ ask link-neighbors with [not infected_v2?]
+        [ if random-float 100 < 35
+        [ if not AntiVirus? [become-infected-v2] ] ] ]
 
-to spread-virus3
   ask turtles with [infected_v3?]
-    [ ask link-neighbors with [infected_v3?]
-        [ if random-float 100 < virus-spread-chance
-            [ become-infected_v3 ] ] ]
+    [ ask link-neighbors with [not infected_v3?]
+        [ if random-float 100 < 15
+        [ if not AntiVirus? [become-infected-v3] ] ] ]
 end
 
-to do-virus1-checks
-  ask turtles with [infected_v1? and virus-check-timer = 0]
+to do-virus-checks
+  ask turtles with [virus-check-timer = 0]
   [
-    if random 100 < 45
-    [
-      ifelse random 100 < 5
-        [ become-resistant ]
-        [ become-susceptible ]
-    ]
+    ifelse random 100 < 25
+     [become-resistant]
+     [become-susceptible]
+
   ]
 end
 
-to do-virus2-checks
-  ask turtles with [infected_v2? and virus-check-timer = 0]
-  [
-    if random 100 < 45
-    [
-      ifelse random 100 < 15
-        [ become-resistant ]
-        [ become-susceptible ]
-    ]
-  ]
-end
 
-to do-virus3-checks
-  ask turtles with [infected_v3? and virus-check-timer = 0]
-  [
-    if random 100 < 45
-    [
-      ifelse random 100 < 15
-        [ become-resistant ]
-        [ become-susceptible ]
-    ]
-  ]
-end
 ; Copyright 2008 Uri Wilensky.
 ; See Info tab for full copyright and license.
 @#$#@#$#@
@@ -207,7 +198,7 @@ virus-spread-chance
 virus-spread-chance
 0.0
 10.0
-9.4
+5.0
 0.1
 1
 %
@@ -248,24 +239,30 @@ NIL
 0
 
 PLOT
-5
-325
-260
-489
+81
+496
+674
+741
 Network Status
-time
-% of nodes
+Days
+Nodes
 0.0
-52.0
+10.0
 0.0
-100.0
+30.0
 true
 true
 "" ""
 PENS
-"susceptible" 1.0 0 -13345367 true "" "plot (count turtles with [not infected? and not resistant?]) / (count turtles) * 100"
-"infected" 1.0 0 -2674135 true "" "plot (count turtles with [infected?]) / (count turtles) * 100"
-"resistant" 1.0 0 -7500403 true "" "plot (count turtles with [resistant?]) / (count turtles) * 100"
+"Alpha Virus" 1.0 1 -14070903 true "" "plot (count turtles with [infected_v1?])"
+"Beta Virus" 1.0 1 -2674135 true "" "plot (count turtles with [infected_v2?])"
+"Gamma Virus" 1.0 1 -1184463 true "" "plot (count turtles with [infected_v3?])"
+"Alpha-Gamma Virus" 1.0 0 -8732573 true "" "plot (count turtles with [infected_v1? and infected_v2?])"
+"Unprotected" 1.0 0 -7500403 true "" "plot (count turtles with [not AntiVirus?])"
+"Protected" 1.0 0 -2064490 true "" "plot (count turtles with [AntiVirus?])"
+"Beta-Gamma Virus" 1.0 0 -955883 true "" "plot (count turtles with [infected_v2? and infected_v3?])"
+"Alpha-Beta-Gamma" 1.0 0 -16777216 true "" "plot (count turtles with [infected_v1? and infected_v2? and infected_v3?])"
+"Alpha-Beta Virus" 1.0 0 -11783835 true "" "plot (count turtles with [infected_v1? and infected_v2?])"
 
 SLIDER
 25
@@ -276,25 +273,10 @@ number-of-nodes
 number-of-nodes
 10
 300
-85.0
+150.0
 5
 1
 NIL
-HORIZONTAL
-
-SLIDER
-25
-210
-230
-243
-virus-check-frequency
-virus-check-frequency
-1
-20
-1.0
-1
-1
-ticks
 HORIZONTAL
 
 SLIDER
@@ -306,7 +288,7 @@ initial-outbreak-size
 initial-outbreak-size
 1
 number-of-nodes
-46.0
+45.0
 1
 1
 NIL
@@ -321,10 +303,35 @@ average-node-degree
 average-node-degree
 1
 number-of-nodes / 4
-11.0
+5.0
 1
 1
 NIL
+HORIZONTAL
+
+TEXTBOX
+57
+250
+251
+476
+Node Colors:\n\nWhite: Unprotected\nMagenta: Protected\n\nBlue: Alpha Virus\n\nGreen: Alpha and Beta Viruses\n\nRed: Beta Virus\n\nOrange: Beta and Gamma Virus\n\nYellow: Gamma Virus\n\nBlack: Alpha Beta and Gamma Viruses\n\n
+11
+0.0
+1
+
+SLIDER
+25
+210
+230
+243
+virus-check-frequency
+virus-check-frequency
+1
+20
+7.0
+1
+1
+ticks
 HORIZONTAL
 
 @#$#@#$#@
@@ -691,7 +698,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.1
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

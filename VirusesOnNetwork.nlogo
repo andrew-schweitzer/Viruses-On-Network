@@ -7,12 +7,13 @@ turtles-own
   virus-check-timer   ;; number of ticks since this turtle's last virus-check
 ]
 
-globals [infected count_v1 count_v2 count_v3 remaining]
+globals [infected count_v1 count_v2 count_v3 remaining Initial-Nodes Initial-Links i]
 
 to setup
   clear-all
   setup-nodes
   setup-spatially-clustered-network
+
 
   set count_v1 initial-outbreak-size / 3
   set infected 0
@@ -39,6 +40,8 @@ to setup
          set infected infected + 1]]
 
   ask links [ set color white ]
+  set Initial-Nodes number-of-nodes
+  set Initial-Links count links
   reset-ticks
 end
 
@@ -49,7 +52,7 @@ to setup-nodes
     ; for visual reasons, we don't put any nodes *too* close to the edges
     setxy (random-xcor * 0.95) (random-ycor * 0.95)
     become-susceptible
-    set virus-check-timer random virus-check-frequency
+    set virus-check-timer random 7
   ]
 end
 
@@ -88,7 +91,7 @@ to go
 end
 
 to health-check
-  ask turtles with [infected_v1? and infected_v2? and infected_v3?] [die]
+  ask turtles with [infected_v1? and infected_v2? and infected_v3? and virus-check-timer = 0] [die]
 end
 
 to become-infected-v1  ;; turtle procedure
@@ -116,11 +119,12 @@ to become-infected-v3  ;; turtle procedure
 end
 
 to become-susceptible  ;; turtle procedure
-  set infected_v1? false
-  set infected_v2? false
-  set infected_v3? false
-  set AntiVirus? false
-  set color white
+
+     set infected_v1? false
+     set infected_v2? false
+     set infected_v3? false
+     set AntiVirus? false
+     set color white
 end
 
 to become-resistant  ;; turtle procedure
@@ -128,37 +132,35 @@ to become-resistant  ;; turtle procedure
   set infected_v2? false
   set infected_v3? false
   set AntiVirus? true
-  set color magenta
+  set color pink
 end
 
 to spread-virus
   ask turtles with [infected_v1?]
     [ ask link-neighbors with [not infected_v1?]
-        [ if random-float 100 < 25
+        [ if random-float 100 < Alpha-Spread
         [ if not AntiVirus? [become-infected-v1] ] ] ]
 
   ask turtles with [infected_v2?]
     [ ask link-neighbors with [not infected_v2?]
-        [ if random-float 100 < 35
+        [ if random-float 100 < Beta-Spread
         [ if not AntiVirus? [become-infected-v2] ] ] ]
 
   ask turtles with [infected_v3?]
     [ ask link-neighbors with [not infected_v3?]
-        [ if random-float 100 < 15
+        [ if random-float 100 < Gamma-Spread
         [ if not AntiVirus? [become-infected-v3] ] ] ]
 end
 
 to do-virus-checks
-  ask turtles with [virus-check-timer = 0]
+  ask turtles with [virus-check-timer = 4]
   [
-    ifelse random 100 < 25
+    ifelse random 100 < AntiViral-Uptake-Rate
      [become-resistant]
-     [become-susceptible]
+    [if not AntiVirus? [become-susceptible]]
 
   ]
 end
-
-
 ; Copyright 2008 Uri Wilensky.
 ; See Info tab for full copyright and license.
 @#$#@#$#@
@@ -188,21 +190,6 @@ GRAPHICS-WINDOW
 1
 ticks
 30.0
-
-SLIDER
-25
-175
-230
-208
-virus-spread-chance
-virus-spread-chance
-0.0
-10.0
-5.0
-0.1
-1
-%
-HORIZONTAL
 
 BUTTON
 25
@@ -239,30 +226,31 @@ NIL
 0
 
 PLOT
-81
-496
-674
-741
+743
+11
+1441
+271
 Network Status
 Days
-Nodes
+Node Percentage
 0.0
 10.0
 0.0
-30.0
+10.0
 true
 true
 "" ""
 PENS
-"Alpha Virus" 1.0 1 -14070903 true "" "plot (count turtles with [infected_v1?])"
-"Beta Virus" 1.0 1 -2674135 true "" "plot (count turtles with [infected_v2?])"
-"Gamma Virus" 1.0 1 -1184463 true "" "plot (count turtles with [infected_v3?])"
-"Alpha-Gamma Virus" 1.0 0 -8732573 true "" "plot (count turtles with [infected_v1? and infected_v2?])"
-"Unprotected" 1.0 0 -7500403 true "" "plot (count turtles with [not AntiVirus?])"
-"Protected" 1.0 0 -2064490 true "" "plot (count turtles with [AntiVirus?])"
-"Beta-Gamma Virus" 1.0 0 -955883 true "" "plot (count turtles with [infected_v2? and infected_v3?])"
-"Alpha-Beta-Gamma" 1.0 0 -16777216 true "" "plot (count turtles with [infected_v1? and infected_v2? and infected_v3?])"
-"Alpha-Beta Virus" 1.0 0 -11783835 true "" "plot (count turtles with [infected_v1? and infected_v2?])"
+"Alpha Virus" 1.0 0 -14070903 true "" "plot (count turtles with [infected_v1?]) / count turtles * 100"
+"Beta Virus" 1.0 0 -2674135 true "" "plot (count turtles with [infected_v2?]) / count turtles * 100"
+"Gamma Virus" 1.0 0 -1184463 true "" "plot (count turtles with [infected_v3?]) / count turtles * 100"
+"Alpha-Gamma Virus" 1.0 0 -8732573 true "" "plot (count turtles with [infected_v1? and infected_v2?])  / count turtles * 100"
+"Unprotected" 1.0 0 -7500403 true "" "plot (count turtles with [not AntiVirus?])  / count turtles * 100"
+"Protected" 1.0 0 -2064490 true "" "plot (count turtles with [AntiVirus?])  / count turtles * 100"
+"Beta-Gamma Virus" 1.0 0 -955883 true "" "plot (count turtles with [infected_v2? and infected_v3?])  / count turtles * 100"
+"Alpha-Beta-Gamma" 1.0 0 -11053225 true "" "plot (count turtles with [infected_v1? and infected_v2? and infected_v3?])  / count turtles * 100"
+"Alpha-Beta Virus" 1.0 0 -6917194 true "" "plot (count turtles with [infected_v1? and infected_v2?])  / count turtles * 100"
+"Dead" 1.0 0 -16777216 true "" "plot (Initial-Nodes - count turtles)  / count turtles * 100"
 
 SLIDER
 25
@@ -272,8 +260,8 @@ SLIDER
 number-of-nodes
 number-of-nodes
 10
-300
-150.0
+1000
+300.0
 5
 1
 NIL
@@ -286,10 +274,10 @@ SLIDER
 118
 initial-outbreak-size
 initial-outbreak-size
-1
-number-of-nodes
-45.0
-1
+3
+number-of-nodes / 2
+30.0
+3
 1
 NIL
 HORIZONTAL
@@ -310,28 +298,135 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-57
-250
-251
-476
-Node Colors:\n\nWhite: Unprotected\nMagenta: Protected\n\nBlue: Alpha Virus\n\nGreen: Alpha and Beta Viruses\n\nRed: Beta Virus\n\nOrange: Beta and Gamma Virus\n\nYellow: Gamma Virus\n\nBlack: Alpha Beta and Gamma Viruses\n\n
+45
+386
+239
+612
+Node Colors:\n\nWhite: Unprotected\nPink: Protected\n\nBlue: Alpha Virus\n\nRed: Beta Virus\n\nYellow: Gamma Virus\n\nOrange: Infected by two viruses\n\nBlack: Alpha Beta and Gamma Viruses\n\n
 11
 0.0
 1
 
+PLOT
+743
+277
+1296
+557
+Infection by Virus
+NIL
+NIL
+0.0
+10.0
+0.0
+5.0
+true
+true
+"" ""
+PENS
+"Alpha Virus" 1.0 0 -13345367 true "" "plot count turtles with [infected_v1?] / count turtles * 100"
+"Beta Virus" 1.0 0 -2674135 true "" "plot count turtles with [infected_v2?] / count turtles * 100"
+"Gamma Virus" 1.0 0 -7171555 true "" "plot count turtles with [infected_v3?] / count turtles * 100"
+
+PLOT
+1306
+278
+1876
+555
+AntiViral Software Uptake
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"Antiviral Nodes" 1.0 0 -2064490 true "" "plot count turtles with [AntiVirus?] / count turtles * 100"
+"Non-Antiviral Nodes" 1.0 0 -16777216 true "" "plot count turtles with [not AntiVirus?] / count turtles * 100"
+"Total Node Count" 1.0 0 -5825686 true "" "plot count turtles"
+"Dead" 1.0 0 -2674135 true "" "plot (Initial-Nodes - count turtles)"
+
+PLOT
+1447
+11
+1875
+271
+Network Structure
+Days
+Links or Turtles
+0.0
+10.0
+0.0
+1.0
+true
+true
+"" ""
+PENS
+"Nodes" 1.0 0 -2674135 true "" "plot count turtles"
+"Links" 1.0 0 -10899396 true "" "plot count links"
+"Initial Links" 1.0 0 -15575016 true "" "plot Initial-Links"
+"Initial Nodes" 1.0 0 -8053223 true "" "plot Initial-Nodes"
+
+SLIDER
+24
+214
+231
+247
+Alpha-Spread
+Alpha-Spread
+0
+100
+20.0
+1
+1
+NIL
+HORIZONTAL
+
 SLIDER
 25
-210
+252
+231
+285
+Beta-Spread
+Beta-Spread
+0
+100
+18.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+26
+291
 230
-243
-virus-check-frequency
-virus-check-frequency
+324
+Gamma-Spread
+Gamma-Spread
+0
+100
+16.0
 1
-20
-7.0
+1
+NIL
+HORIZONTAL
+
+SLIDER
+27
+174
+231
+207
+AntiViral-Uptake-Rate
+AntiViral-Uptake-Rate
+0
+100
+12.0
 1
 1
-ticks
+NIL
 HORIZONTAL
 
 @#$#@#$#@
@@ -702,6 +797,35 @@ NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>count turtles</metric>
+    <metric>count turtles with [AntiVirus?]</metric>
+    <metric>count turtles with [infected_v1?]</metric>
+    <metric>count turtles with [infected_v2?]</metric>
+    <metric>count turtles with [infected_v3?]</metric>
+    <metric>count turtles with [infected_v1? and infected_v2?]</metric>
+    <metric>count turtles with [infected_v2? and infected_v3?]</metric>
+    <metric>count turtles with [infected_v1? and infected_v3?]</metric>
+    <metric>count turtles with [infected_v1? and infected_v2? and infected_v3?]</metric>
+    <metric>count links</metric>
+    <metric>(Initial-Nodes - count turtles)</metric>
+    <enumeratedValueSet variable="number-of-nodes">
+      <value value="300"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="initial-outbreak-size">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="average-node-degree">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="virus-spread-chance">
+      <value value="5"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
